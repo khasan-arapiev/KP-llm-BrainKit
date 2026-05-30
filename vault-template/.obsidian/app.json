@@ -1,0 +1,8 @@
+{
+  "userIgnoreFilters": [
+    "production/"
+  ],
+  "alwaysUpdateLinks": true,
+  "newLinkFormat": "shortest",
+  "attachmentFolderPath": "raw/assets"
+}
