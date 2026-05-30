@@ -1,0 +1,5 @@
+# Planning artifacts name the author and his businesses — never publish.
+docs/
+SANITIZE-CHECK.md
+.DS_Store
+Thumbs.db
