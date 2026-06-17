@@ -82,6 +82,7 @@ For every vault target (and any orphan link discovered along the way):
 1. Run the standard vault lint checklist from `<vault>/CLAUDE.md` under "Operations → Lint":
    - Contradictions between pages.
    - Stale claims (compare to newest source on the same topic).
+   - Volatile claims (pricing, competitor data, market figures) missing a recency marker, or carrying one older than ~6 months. See CLAUDE.md, Recency and confidence.
    - Orphan pages.
    - Concepts mentioned across pages without their own page.
    - Missing cross-references.

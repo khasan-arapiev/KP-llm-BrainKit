@@ -40,7 +40,7 @@ folder, e.g. `C:\Users\<user>`; macOS/Linux: `$HOME`).
 1. Copy each subfolder of `<repo>/skills/` into `~/.claude/skills/`, EXCEPT this
    `install` skill itself (it does not need to live there). That means: `KP-Setup`,
    `KP-Grill`, `KP-Migrate`, `KP-BugFix`, `KP-WikiHealth`, `code-cowork`, `handoff`,
-   `wrap-up`, with their `templates/` subfolders intact.
+   `wrap-up`, `signoff`, with their `templates/` subfolders intact.
 2. Copy each file in `<repo>/commands/` into `~/.claude/commands/`.
 3. If a skill or command of the same name already exists, ask before overwriting.
 

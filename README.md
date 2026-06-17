@@ -15,7 +15,7 @@ Based on Andrej Karpathy's LLM-wiki pattern (gist `442a6bf555914893e9891c11519de
 - **A blank Obsidian vault** with a battle-tested schema: an `index`, an append-only
   `log`, and folders for sources, entities, concepts, syntheses, lessons, and projects.
   The `CLAUDE.md` inside it is the operating manual Claude reads first every session.
-- **Eight skills** that auto-trigger on natural phrases:
+- **Nine skills** that auto-trigger on natural phrases:
   - `KP-Grill` — grills your idea with one sharp question at a time, files a PRD.
   - `KP-Setup` — scaffolds a new project (folder + matching vault pages) and audits existing ones.
   - `KP-Migrate` — retrofits an existing code project into the system (credentials by reference only, never copied).
@@ -24,8 +24,10 @@ Based on Andrej Karpathy's LLM-wiki pattern (gist `442a6bf555914893e9891c11519de
   - `code-cowork` — pair-programming build mode: plan, architect, build to a high standard with TDD.
   - `wrap-up` — end-of-session sweep: review, lint the vault, update the index and log.
   - `handoff` — compact a conversation into a doc the next session can pick up.
+  - `signoff` — one-command session close: writes a handoff, runs wrap-up, then prints a copy-paste prompt to continue in a fresh chat.
 - **The matching slash-commands** (`/KP-Setup`, `/KP-Grill`, `/KP-Healthcheck`,
-  `/KP-Migrate`, `/KP-BugFix`, `/KP-WikiHealth`, `/code-cowork`).
+  `/KP-Migrate`, `/KP-BugFix`, `/KP-WikiHealth`, `/code-cowork`). `wrap-up`, `handoff`,
+  and `signoff` trigger on natural phrases ("wrap up", "sign off") rather than a slash-command.
 - An **installer** that pulls three official Anthropic plugins so your Claude has the
   same mindset and web-design ability: `superpowers` (brainstorming, TDD, debugging,
   verification), `frontend-design` (production-grade web/UX/UI), and `playground`

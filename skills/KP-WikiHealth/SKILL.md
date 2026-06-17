@@ -83,7 +83,7 @@ For each candidate (orphan, stale, or stub from Phase 2), read the page in full 
 - **Delete.** Outdated, contradicted by newer pages, or never-finished scratch that adds no future value. Include the reason in one sentence.
 - **Merge into [[X]].** Content has value but belongs on another page. Name the target.
 - **Keep, link from [[X]].** Content is fine, it's just unlinked. Name where to add the inbound link.
-- **Keep, refresh.** Content is still right but `updated:` is old. The fix is bumping the date after a re-read.
+- **Keep, refresh.** Content is still right but `updated:` is old, or a volatile claim (pricing, competitor data, market figures, API limits) carries a recency marker older than ~6 months or none at all. The fix is a re-read: verify the volatile claims, add or update `(as of YYYY-MM, source)` markers per CLAUDE.md, Recency and confidence, then bump `updated:`.
 - **Keep as-is.** Mechanical signal was a false positive (e.g. intentionally short reference page, intentionally orphan top-level entry).
 
 Never recommend Delete on a page whose content is load-bearing in another page's narrative. When in doubt, recommend Merge or Keep + link.

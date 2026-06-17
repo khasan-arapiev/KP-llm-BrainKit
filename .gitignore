@@ -1,5 +1,6 @@
 # Planning artifacts name the author and his businesses — never publish.
-docs/
+# Root-anchored so vault-template/docs/ (shippable) is NOT ignored.
+/docs/
 SANITIZE-CHECK.md
 .DS_Store
 Thumbs.db

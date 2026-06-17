@@ -94,6 +94,15 @@ Match this house style:
 - Lead with the claim, support with evidence, cite with `[[source-summary-page]]`.
 - No sugar-coating. Be real, productive, logical.
 
+### Recency and confidence
+
+Volatile facts decay. A price, a competitor feature, a market figure, an API limit, a person's role: all can be wrong six months later while the page still reads as authoritative. Two inline conventions keep stale claims honest.
+
+- **Recency markers.** Tag any claim that can go out of date with `(as of YYYY-MM, source)` right where the claim is made. The month is when the claim was true at the source, not when the page was written. This separates "when it was true" from the page-level `updated:` (when the vault last touched the page). On a lint pass, a claim with an old recency marker is a refresh candidate even when `updated:` is recent.
+- **Confidence.** When a claim is not certain, say so in line: mark it `(low confidence)` or `(unverified)`, or hedge in plain words, and cite what it rests on. This is the page-level form of "never guess, find out": a hedged, sourced claim is useful; a confident-sounding guess is a trap for future sessions. Verified facts need no marker, the absence of a hedge means the agent stands behind it.
+
+Apply both sparingly. A page of evergreen reasoning needs neither. A pricing table, a competitor profile, a market-size estimate, or a research synthesis needs both.
+
 ### How the agent should think and work
 
 The agent is not here to please the owner. The agent is here to lead them to the best version of the goal they are trying to reach.
@@ -207,6 +216,7 @@ Trigger: the owner says "lint" or "health check the wiki".
 Checklist:
 - Contradictions between pages.
 - Stale claims that newer sources have superseded.
+- Volatile claims (pricing, competitor data, market figures) missing a recency marker or carrying one older than ~6 months. See Recency and confidence.
 - Orphan pages (no inbound `[[links]]`).
 - Concepts mentioned in passing across many pages but lacking their own page.
 - Missing cross-references between related pages.
@@ -225,7 +235,7 @@ Every entry in `log.md` starts with this prefix so the log stays grep-parseable:
 ## [YYYY-MM-DD] <op> | <one-line summary>
 ```
 
-Where `<op>` is one of: `ingest`, `query`, `lint`, `setup`, `note`.
+Where `<op>` is one of: `ingest`, `query`, `lint`, `setup`, `note`, `grill`, `plan`, `decision`, `code-cowork`, `bugfix`, `wrap-up`, `migrate`. Exactly one op per heading; pick the dominant op and mention the rest in the summary.
 
 To see the last five entries:
 
@@ -252,6 +262,7 @@ The agent updates `index.md` on every ingest and whenever a page is created, ren
 - Obsidian is the reader. The agent edits files; the owner browses graph view and follows links in real time.
 - Git: this vault is plain markdown. It can be a git repo at any time for version history.
 - Search: at this scale `index.md` plus `Grep` is enough. Revisit qmd or similar when the vault grows past roughly 100 sources.
+- Obsidian file formats (optional): the `kepano/obsidian-skills` package teaches the agent Obsidian's native formats: `obsidian-bases` (`.base` table/card views), `obsidian-markdown` (callouts, embeds, properties), `json-canvas` (`.canvas` visual maps), `defuddle` (clean markdown from a web page before an ingest), and `obsidian-cli` (scripted vault ops). Install with `npx skills add https://github.com/kepano/obsidian-skills -g` if you want them. Not required by this kit.
 
 ---
 
@@ -259,7 +270,7 @@ The agent updates `index.md` on every ingest and whenever a page is created, ren
 
 - Whether to split `wiki/` into subfolders or keep it flat.
 - Whether to add a `daily/` folder for journal-style entries.
-- Whether to wire Dataview queries into `index.md` once frontmatter is consistent.
+- Whether to use native Obsidian Bases (`.base` files) for structured table or card views of pages. Bases is the modern built-in answer; Dataview is the older plugin alternative. Prefer Bases via the optional `obsidian-bases` skill rather than wiring Dataview into `index.md`, which stays a hand-maintained catalog.
 - Whether to initialise git and back the vault up.
 
 The agent should not decide these silently. Ask the owner when the question first comes up, then record the answer here.
