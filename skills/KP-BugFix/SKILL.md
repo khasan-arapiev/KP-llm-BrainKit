@@ -116,7 +116,7 @@ When the fix is confirmed, file a post-mortem to the vault.
 
 Location: `<vault>\wiki\projects\<slug>\post-mortems\<YYYY-MM-DD>-<short-slug>.md`
 
-Use the post-mortem template defined in `Brain\docs\project-handling.md`. Fill in:
+Use the post-mortem template defined in `<vault>\docs\project-handling.md`. Fill in:
 - What happened (the symptom).
 - Root cause (the real reason, not the symptom).
 - What we tried (in order).

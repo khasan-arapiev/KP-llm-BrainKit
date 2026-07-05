@@ -43,7 +43,7 @@ Read that file directly when you need keys. Never copy values into the vault, ne
 
 _(One bullet per integration. Use labels only, never values. KP-Migrate fills this on import. KP-Setup leaves it empty for you to fill as you wire things up.)_
 
-- _(e.g. **ghl** fields: api_key, location_id — used in `project/webhooks/ghl.php`)_
+- _(e.g. **stripe** fields: api_key, webhook_secret — used in `src/payments/`)_
 
 ## Related pages
 

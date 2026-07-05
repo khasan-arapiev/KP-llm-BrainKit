@@ -95,12 +95,12 @@ This is the security-critical step. Read carefully.
 
 1. Try to locate the Security file. Pattern attempts in order:
    - `Security\<slug>.json`
-   - `Security\<slug-with-underscores>.json` (e.g. `gns_pdf_service.json`)
+   - `Security\<slug-with-underscores>.json` (e.g. `acme_pdf_service.json`)
    - `Security\<slug>_service.json`
    - `Security\<first-word-of-slug>.json` (e.g. `acme.json` for `acme-site`)
 2. If zero matches, ask the owner for the path. If multiple, list them and ask which.
 3. If a file is found, **read it once, in memory, and extract ONLY the top-level JSON keys**. Do not log the file content. Do not echo values to chat. Do not write any value into any vault page.
-4. For nested objects, extract second-level KEYS only (the field names), never values. Example: from `{"ghl": {"api_key": "x", "location_id": "y"}}` extract the labels `ghl` (with sub-fields `api_key`, `location_id`). The actual `"x"` and `"y"` values are never touched.
+4. For nested objects, extract second-level KEYS only (the field names), never values. Example: from `{"crm": {"api_key": "x", "location_id": "y"}}` extract the label `crm` (with sub-fields `api_key`, `location_id`). The actual `"x"` and `"y"` values are never touched.
 5. Output a list of integration labels in the vault's `overview.md` Credentials section, in the format defined in Step 6.
 6. **If at any point a value looks like it might be a secret (long random string, password, key, token), do NOT include it anywhere.** Treat all values as secret.
 
@@ -149,7 +149,7 @@ Will UPDATE in vault:
 
 Will REFERENCE in overview.md Credentials section:
   Security\<filename>.json
-  Integration labels: ghl, meta, resend, hostinger, ...
+  Integration labels: crm, stripe, sendgrid, ...
   (Values stay in Security\, never copied)
 
 Will NOT touch:
@@ -180,7 +180,7 @@ After "yes":
 4. Backup existing project `CLAUDE.md` to `CLAUDE.md.pre-migrate.bak`.
 5. Write the new thin router `CLAUDE.md` using KP-Setup's `project-CLAUDE.md` template, filled with `{{PROJECT_NAME}}`, `{{SLUG}}`, `{{STACK}}`.
 6. Update `<vault>\wiki\index.md` under `## Projects`. Format: `- [[<slug>-overview]] <one-line purpose>.` Indent under a client umbrella entry if this is a sub-project.
-7. Update `<vault>\wiki\credentials.md` (master credentials index) with the project's Security file mapping and integration labels.
+7. Update `<vault>\wiki\credentials.md` (master credentials index; create the page on the first migration) with the project's Security file mapping and integration labels.
 8. Update `<vault>\wiki\log.md`: `## [YYYY-MM-DD] migrate | <slug>: scaffolded vault folder, ported N docs, wired credentials reference. Old CLAUDE.md backed up.`
 
 ### Step 8: Report
@@ -236,7 +236,7 @@ _The field list shows WHICH keys exist in the security file. Values are never re
 - **Project already migrated.** Stop, suggest `/KP-Healthcheck`.
 - **No Security file found.** Continue, but flag this in the report. Write the Credentials section with: "No security file located at the standard paths. Add credentials to `Security\<slug>.json` and re-run this skill or update overview.md manually."
 - **Cannot parse Security file as JSON.** Stop the credentials step, flag it, continue with the rest. Do not guess at the schema.
-- **the owner says cancel or dry-run only.** Stop immediately. Delete any partial folder that was created.
+- **The owner says cancel or dry-run only.** Stop immediately. Delete any partial folder that was created.
 - **Source folder is a git submodule.** Stop. Ask the owner whether to migrate the submodule itself or the parent.
 
 ## Trigger precedence

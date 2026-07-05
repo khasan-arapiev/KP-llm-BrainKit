@@ -39,15 +39,15 @@ Skip for trivial work (typo fix, tag tweak, a small bug).
 
 ## When NOT to use
 
-- the owner already has a written PRD or spec. Just build it.
-- the owner is asking a question, not planning work.
+- The owner already has a written PRD or spec. Just build it.
+- The owner is asking a question, not planning work.
 - Production is broken. Use `KP-BugFix` instead.
 
 ## How it works
 
 One sharp question per turn. Wait for the answer. Use the answer to choose the next question. There is no fixed question limit; ask as many as the topic genuinely needs. Stop when:
 - Every question on the checklist below has a real answer and no open issue remains, OR
-- the owner says "enough" or "build it now".
+- The owner says "enough" or "build it now".
 
 Never ask compound questions ("what is the goal AND who is it for"). One axis per turn.
 
@@ -82,7 +82,7 @@ The rest of the grill anchors to this slug. If the owner refuses to name it, do 
 9. **Dependencies.** Anything blocking the start? Anything that has to be ready first?
 10. **Alternatives.** What else did you consider, and why is this the one?
 
-Adapt the wording to the project. Skip a question if the answer is genuinely obvious from context (do not ask "who is this for" if the owner is clearly building it for himself). Add an off-checklist question if a deeper issue surfaces.
+Adapt the wording to the project. Skip a question if the answer is genuinely obvious from context (do not ask "who is this for" if the owner is clearly building it for themselves). Add an off-checklist question if a deeper issue surfaces.
 
 ## House style for the questions
 
@@ -151,12 +151,12 @@ If context.md does not exist yet, create it lazily the moment the first term nee
 File an ADR only when all three are true:
 
 1. **Hard to reverse.** The cost of changing your mind later is real (data migrations, breaking changes, public commitments).
-2. **Surprising without context.** A future reader, including future-the owner, will look at the code and ask "why did they do it this way?".
+2. **Surprising without context.** A future reader, including a future reader, will look at the code and ask "why did they do it this way?".
 3. **Result of a real trade-off.** There were genuine alternatives. You picked one for specific reasons.
 
 If any one of the three is missing, skip the ADR. Default to skipping. "We chose Postgres" is not an ADR if nobody would be surprised; it is one if the obvious choice was SQLite and you went the other way for specific reasons.
 
-ADRs land in `wiki/projects/<slug>/decisions/` using the template in `Brain/docs/project-handling.md`.
+ADRs land in `wiki/projects/<slug>/decisions/` using the template in `<vault>\docs\project-handling.md`.
 
 Also:
 - Update `wiki/index.md`: add the PRD under a `## Plans` section (create if missing).

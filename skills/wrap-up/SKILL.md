@@ -172,7 +172,7 @@ The following are **load-bearing development assets**. They may look redundant a
 - **Git commits, tags, reflog entries.** Never. History is sacred.
 - **PRDs, plans, architecture notes, ADRs, post-mortems, learnings, lessons.** Even after the work ships. Mark them with the right frontmatter status (Phase 3 of this skill) but never delete the file. Abandoned drafts get `status: abandoned`, not deletion, unless the owner explicitly says delete.
 - **Anything under `wiki/`** other than confirmed-abandoned drafts that the owner has already explicitly OKed for removal. The vault is the long-term knowledge base.
-- **Anything under `Brain/security/`** ever. Credentials and references.
+- **Anything under `<vault>\security\`** ever. Credentials and references.
 - **Tracked code files** in any `production/<slug>/`. If code is dead, the right tool is a code review pass that surfaces dead code with reasons, not a wrap-up deletion.
 - **Module schemas, migrations, Prisma files, manifests.** Even empty ones (an empty `modules/<slug>/schema.prisma` is intentional scaffolding for the next phase).
 - **CLAUDE.md, README.md, CONTRIBUTING.md** routers.

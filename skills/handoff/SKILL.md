@@ -2,6 +2,7 @@
 name: handoff
 description: Compact the current conversation into a handoff document for another agent to pick up.
 argument-hint: "What will the next session be used for?"
+license: MIT
 ---
 
 Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save it to `<vault>\handoffs\` (`<vault>` is the vault root from `~/.claude/brainkit.json`, key `vaultPath`) (create that folder if it does not exist) with a descriptive, dated filename (`<YYYY-MM-DD>-<short-slug>.md`). These handoffs are transient: they get deleted once picked up — by the owner, or by the signoff skill's predecessor-pruning rule (signoff owns the agent-side deletion procedure). So never reference them from `index.md`, `log.md`, or any wiki page with a `[[wikilink]]`; plain-text path mentions only.

@@ -29,7 +29,7 @@ Full-vault health scan. The goal is to leave the vault in a state where future c
 
 ## When to use
 
-- the owner asks for a wiki/vault health check, lint, audit, or cleanup.
+- The owner asks for a wiki/vault health check, lint, audit, or cleanup.
 - Before a long planning session, to make sure the agent will be reading clean context.
 - After a big migration or restructure (e.g. KP-Migrate just ran on a project).
 
@@ -59,7 +59,7 @@ It prints a summary plus a 1-10 health score and writes full JSON to `%TEMP%\wik
 
 What it checks, and the rules baked into it:
 
-1. **Broken wikilinks**, resolved **Brain-wide** (the Obsidian vault root is `Brain\`, not `wiki\`), with code fences AND inline backtick spans stripped first. Links that resolve outside `wiki/` (docs/, CLAUDE.md) are reported as `resolves_outside_wiki`, they are NOT broken.
+1. **Broken wikilinks**, resolved **Brain-wide** (the Obsidian vault root is `<vault>\`, not `<vault>\wiki\`), with code fences AND inline backtick spans stripped first. Links that resolve outside `wiki/` (docs/, CLAUDE.md) are reported as `resolves_outside_wiki`, they are NOT broken.
 2. **Rename candidates.** Each broken link carries suffix-match suggestions (broken `[[acme-app-status]]` suggests `projects/acme-app/core/status.md`). Bulk rename damage becomes a repoint mapping, not archaeology. Repoints use full-path links per CLAUDE.md rename hygiene.
 3. **Ambiguous links.** A bare `[[status]]`-style link whose stem matches multiple files. Must be rewritten to a path link.
 4. **Handoff links.** Wiki pages linking into `handoffs/` (forbidden, handoffs are transient and get deleted).

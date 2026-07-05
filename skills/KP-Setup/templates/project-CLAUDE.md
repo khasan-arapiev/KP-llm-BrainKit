@@ -58,7 +58,7 @@ Code hygiene (always apply):
 
 Workflow:
 - Non-trivial work starts in Plan Mode. Approve the plan before code changes.
-- "Deploy" means: commit on dev, merge to main, FTP via the project's deploy script. Do not ask the owner for the three steps each time.
+- "Deploy" means whatever this project's deploy process defines. Record it in `map.md` once so the agent does not ask for the steps each time.
 - Skip git commits unless the owner asks.
 
 ---
