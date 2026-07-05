@@ -6,10 +6,11 @@ description: >
   only); `KP healthcheck` audits an existing project and produces a fix
   plan that the owner must approve before any change is applied. All project
   knowledge (map, context, review, status, ADRs, post-mortems, learnings)
-  lives in the Obsidian Brain vault and is out of scope for this skill.
-  Trigger on: "KP setup", "KP-setup", "KP healthcheck", "KP-healthcheck",
-  "set up project", "scaffold project", "new project", "audit project",
-  "health check project", "project hygiene", "is this project clean".
+  lives in the Obsidian Brain vault at <vault> and is
+  out of scope for this skill. Trigger on: "KP setup", "KP-setup",
+  "KP healthcheck", "KP-healthcheck", "set up project", "scaffold project",
+  "new project", "audit project", "health check project", "project hygiene",
+  "is this project clean".
 license: MIT
 ---
 
@@ -21,12 +22,6 @@ A small, focused skill. Two commands:
 2. **KP healthcheck.** Audit a project folder and its vault pages. Produce a scored report plus a numbered fix plan. **Apply nothing without the owner's approval.**
 
 Anything beyond these two is out of scope. Knowledge capture, ADRs, post-mortems, learnings, planning, debugging loops, handoffs, session state are owned by the Obsidian Brain vault. This skill never writes those.
-
-## Vault path
-
-Resolve the vault root from `~/.claude/brainkit.json` (the `vaultPath` key). If that
-file is missing, ask the owner where their Brain vault lives and offer to create the
-config. Throughout this skill, `<vault>` means that resolved path.
 
 ## The architecture this skill assumes
 
@@ -40,7 +35,7 @@ Project folder (lives with the code):
 
 Vault (<vault>, single source of truth for knowledge):
   wiki/projects/<slug>/
-    <slug>-overview.md   The entry point. Stack, status, links. (e.g. my-app-overview.md)
+    <slug>-overview.md   The entry point. Stack, status, links. (e.g. acme-app-overview.md)
     core/                Supporting reference docs.
       map.md             Module map, entry points, layering, local dev.
       context.md         Domain glossary.
@@ -53,9 +48,9 @@ Vault (<vault>, single source of truth for knowledge):
     learnings/           Captured learnings. <short-slug>.md.
 
   Every page inside core/, plans/, decisions/, etc. carries `aliases: [<slug>-<type>, ...]`
-  in frontmatter so cross-project wikilinks like [[my-app-map]] still resolve.
+  in frontmatter so cross-project wikilinks like [[acme-app-map]] still resolve.
 
-Client umbrella projects nest sub-projects, each with their own core/:
+Client umbrella projects (e.g. Acme Corp) nest sub-projects, each with their own core/:
   wiki/projects/<client-slug>/
     <client-slug>-overview.md
     core/ plans/ decisions/ post-mortems/ learnings/    Client-wide.
@@ -66,6 +61,12 @@ Client umbrella projects nest sub-projects, each with their own core/:
 
 The project `CLAUDE.md` is the only doc that lives with the code. It points the agent at the vault for everything else.
 
+## Vault path
+
+Resolve the vault root from `~/.claude/brainkit.json` (the `vaultPath` key). If that
+file is missing, ask the owner where their Brain vault lives and offer to create the
+config. Throughout this skill, `<vault>` means that resolved path.
+
 ---
 
 ## Command 1: KP setup
@@ -75,14 +76,14 @@ Trigger: "KP setup", "KP-setup", "set up project", "scaffold project <name>", "n
 ### Inputs
 
 Ask only for what cannot be inferred:
-- Project name and slug (kebab-case, e.g. `my-app`, `studio-tool`).
+- Project name and slug (kebab-case, e.g. `recipe-box`, `studio-tool`).
 - Project folder path (default: current working directory).
 - Stack (one word: node, php, python, static-html, mixed). Skip if existing files make it obvious.
 - One-line purpose.
 
 ### Steps
 
-1. **Verify vault is reachable.** Check `<vault>/CLAUDE.md` exists. If not, stop and ask the owner to set up the vault first.
+1. **Verify vault is reachable.** Check `<vault>\CLAUDE.md` exists. If not, stop and ask the owner to set up the vault first.
 2. **Verify project folder.** Define "non-empty" as containing files other than `.git/`, `.gitignore`, and standard editor metadata (`.vscode/`, `.idea/`, `.editorconfig`, `.DS_Store`). If non-empty by that definition, dry-run first: list what would be created or skipped. Wait for approval.
 
    **Read the existing layout before deciding what to create.** If the folder already contains `src/`, `app/`, `lib/`, `pages/`, or `bot/`, treat that as the equivalent of `project/` and do NOT create a separate `project/` folder. If a framework marker exists (`next.config.*`, `vite.config.*`, `astro.config.*`, `nuxt.config.*`, `svelte.config.*`, `remix.config.*`, `package.json` with a known framework dep, `requirements.txt` for Python apps), treat the framework's expected layout as the authoritative variant and skip creating `project/` entirely. Note the chosen variant in the project's vault `map.md` so future healthchecks know what to expect.
@@ -93,11 +94,11 @@ Ask only for what cannot be inferred:
    - `workshop/` always.
    - `assets/` always.
    - `.gitignore` from `templates/gitignore.txt` (only if missing).
-   - `CLAUDE.md` from `templates/project-CLAUDE.md` (fill in placeholders). No README. The vault `overview.md` is the single "what is this" page.
-4. **Create vault pages** at `<vault>/wiki/projects/<slug>/`:
+   - `CLAUDE.md` from `templates/project-CLAUDE.md` (fill in `{{...}}` placeholders; `{{OWNER}}` comes from `~/.claude/brainkit.json`, and replace every `<vault>` with the resolved absolute vault path so the generated file stands alone). No README. The vault `overview.md` is the single "what is this" page.
+4. **Create vault pages** at `<vault>\wiki\projects\<slug>\`:
    - `<slug>-overview.md` at the project folder root (entry point, keeps slug prefix).
    - `core/` subfolder with `map.md`, `context.md`, `review.md`, `status.md` (plus `strategy.md` if relevant). Each file's frontmatter MUST include `aliases: [<slug>-<type>, ...]` so cross-project links resolve.
-   - Empty `plans/`, `decisions/`, `post-mortems/`, `learnings/` folders.
+   - Empty `plans\`, `decisions\`, `post-mortems\`, `learnings\` folders.
 5. **Update vault `index.md`.** Add the new project under `## Projects` (create the section if missing). Format: `- [[<slug>-overview]] <one-line purpose>.`
 6. **Update vault `log.md`.** Append: `## [YYYY-MM-DD] setup | New project <slug> scaffolded.`
 7. **Report back.** List every file and folder created. Show the vault overview wikilink. Tell the owner to fill in `overview.md` and `context.md` first.
@@ -125,7 +126,7 @@ This skill never auto-applies fixes. Approval is required even for fixes that lo
 | Layering | `project/`, `workshop/`, `assets/` exist, OR a documented variant (`src/`, `app/`, `lib/`, `pages/`, `bot/`), OR a recognised framework layout (Next.js, Vite, Astro, Nuxt, Svelte, Remix, etc. detected by config file). Framework projects are not penalised for missing `project/`. | 10 |
 | Trash in project root | No `*.bak`, `*.tmp`, `*.log`, `test-*.html`, scratch files. Exclude `tests/`, `__tests__/`, `e2e/`, `cypress/`, `playwright/`, `spec/`, `__fixtures__/` directories from the scan. Test files inside those directories are legit, not trash. | 10 |
 | .gitignore present | Standard ignores for the stack | 5 |
-| Vault overview present | `<vault>/wiki/projects/<slug>/<slug>-overview.md` exists and non-empty | 5 |
+| Vault overview present | `<vault>\wiki\projects\<slug>\<slug>-overview.md` exists and non-empty | 5 |
 | Vault core/ folder populated | `core/map.md`, `core/context.md`, `core/review.md`, `core/status.md` all exist | 5 |
 | Project `CLAUDE.md` thin | Exists, under 120 lines, contains the vault pointer | 10 |
 | Junk comments | No "as requested", "removed feature X", "added by Claude" | 10 |
@@ -144,7 +145,7 @@ Stack size caps (lines):
 
 | Check | Pass condition | Weight |
 |---|---|---|
-| Project folder exists in vault | `<vault>/wiki/projects/<slug>/` present | 5 |
+| Project folder exists in vault | `<vault>\wiki\projects\<slug>\` present | 5 |
 | Required pages exist | `<slug>-overview.md` at root, plus `core/map.md`, `core/context.md`, `core/review.md`, `core/status.md` all present | 10 |
 | Freshness | No vault page with `updated:` older than 90 days | 10 |
 | Dead wikilinks | Every `[[link]]` in the project's vault pages resolves | 5 |
@@ -160,7 +161,7 @@ Issues:
   [10] Trash in project/: test-pricing.html, debug.log
   [05] Project CLAUDE.md is 142 lines (cap 80)
   [10] File size: project/lib/utils.js is 411 lines (cap 300)
-  [05] Stale vault page: projects/<slug>/context.md updated 2026-02-01 (108 days)
+  [05] Stale vault page: projects/<slug>/context.md updated 108 days ago
 
 Fix plan (awaiting approval):
   1. Move test-pricing.html and debug.log to workshop/, or delete them.
@@ -232,3 +233,4 @@ All vault templates carry `updated:` frontmatter so the healthcheck freshness ru
 4. **Trace every edit.** Every change must trace to a command's defined steps. No drive-by edits.
 5. **Honesty.** If a check was skipped or a path could not be verified, say so plainly. Do not claim "healthcheck passed" without running every check.
 6. **Leave it clean.** If setup is cancelled mid-flow, remove any half-created folders or files. Healthcheck fixes that delete trash are part of the job, not a side effect. The project folder and the vault should look like only the requested operation happened.
+7. **Rename hygiene (mandatory).** Any operation that renames or moves a vault page MUST, in the same run: grep the whole vault for the old slug, repoint every inbound `[[link]]` (full-path form for non-unique stems), then run `python "$env:USERPROFILE\.claude\skills\KP-WikiHealth\scripts\scan.py"` and confirm zero new broken links. A restructure that skips this tears the link graph (a past restructure that skipped this tore 400+ links).

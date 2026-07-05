@@ -19,17 +19,17 @@ license: MIT
 
 # KP-WikiHealth
 
-Full-vault health scan. The goal is to leave the vault in a state where future chats are faster, more accurate, and less polluted with dead or duplicated information. Mechanical checks surface candidates; the agent applies judgment to each one; the owner approves anything risky.
-
 ## Vault path
 
 Resolve the vault root from `~/.claude/brainkit.json` (the `vaultPath` key). If that
 file is missing, ask the owner where their Brain vault lives and offer to create the
 config. Throughout this skill, `<vault>` means that resolved path.
 
+Full-vault health scan. The goal is to leave the vault in a state where future chats are faster, more accurate, and less polluted with dead or duplicated information. Mechanical checks surface candidates; the agent applies judgment to each one; the owner approves anything risky.
+
 ## When to use
 
-- The owner asks for a wiki/vault health check, lint, audit, or cleanup.
+- the owner asks for a wiki/vault health check, lint, audit, or cleanup.
 - Before a long planning session, to make sure the agent will be reading clean context.
 - After a big migration or restructure (e.g. KP-Migrate just ran on a project).
 
@@ -41,36 +41,38 @@ config. Throughout this skill, `<vault>` means that resolved path.
 
 ## Scope (always full vault)
 
-The scan covers everything under `<vault>/wiki/`. It does not touch `raw/`, `production/`, `.obsidian/`, `.backups/`, or anything outside `wiki/`. `CLAUDE.md` is read as the schema but never rewritten by this skill.
+The scan covers everything under `<vault>\wiki\`. It does not touch `raw/`, `production/`, `.obsidian/`, `.backups/`, or anything outside `wiki/`. `CLAUDE.md` is read as the schema but never rewritten by this skill.
 
 ## How it runs
 
 Six phases. Do them in order. Use TodoWrite to track progress across phases.
 
-### Phase 1: Inventory
+### Phase 1 + 2: Mechanical scan (bundled scanner)
 
-1. Glob every `.md` file under `wiki/`. Build the canonical page list.
-2. For each page, parse frontmatter. Note any that are missing or malformed.
-3. Build a link graph: for each page, list the `[[wikilinks]]` it contains and the pages that link to it.
-4. Read `wiki/index.md` and extract every page slug it references.
-5. Read `wiki/log.md` and confirm each entry matches `## [YYYY-MM-DD] <op> | <summary>` format.
+Run the bundled deterministic scanner. Do not re-derive these checks by hand and do not write a new ad-hoc script:
 
-Output of this phase is a working set the next phases scan against. No edits yet.
+```bash
+python "$env:USERPROFILE\.claude\skills\KP-WikiHealth\scripts\scan.py"
+```
 
-### Phase 2: Mechanical scan (surface candidates only)
+It prints a summary plus a 1-10 health score and writes full JSON to `%TEMP%\wikihealth.json`. Read the JSON selectively, category by category, never whole if large.
 
-Run all of these. Each produces a list of pages or issues. Nothing is fixed yet.
+What it checks, and the rules baked into it:
 
-1. **Broken wikilinks.** Every `[[target]]` whose target does not resolve to a real page.
-2. **Orphan pages.** Pages with zero inbound `[[wikilinks]]` AND not listed in `index.md`.
-3. **Stale pages.** `updated:` older than 90 days from today's date.
-4. **Stub pages.** Body (post-frontmatter) shorter than 50 words.
-5. **Frontmatter issues.** Missing required fields (`title`, `type`, `created`, `updated`), unknown `type` values, malformed YAML.
-6. **Index drift.** Pages that exist on disk but aren't in `index.md`. Entries in `index.md` whose target doesn't exist.
-7. **Log format violations.** Entries that don't match the `## [YYYY-MM-DD] <op> | <summary>` prefix.
-8. **Duplicate tables.** Same table headers (full row, normalised whitespace) appearing on 2+ pages.
-9. **Duplicate paragraphs.** Same paragraph (3+ sentences, normalised whitespace) appearing on 2+ pages.
-10. **Oversized pages.** More than 400 lines (split candidates per CLAUDE.md schema).
+1. **Broken wikilinks**, resolved **Brain-wide** (the Obsidian vault root is `Brain\`, not `wiki\`), with code fences AND inline backtick spans stripped first. Links that resolve outside `wiki/` (docs/, CLAUDE.md) are reported as `resolves_outside_wiki`, they are NOT broken.
+2. **Rename candidates.** Each broken link carries suffix-match suggestions (broken `[[acme-app-status]]` suggests `projects/acme-app/core/status.md`). Bulk rename damage becomes a repoint mapping, not archaeology. Repoints use full-path links per CLAUDE.md rename hygiene.
+3. **Ambiguous links.** A bare `[[status]]`-style link whose stem matches multiple files. Must be rewritten to a path link.
+4. **Handoff links.** Wiki pages linking into `handoffs/` (forbidden, handoffs are transient and get deleted).
+5. **Memory-slug links.** Links matching `feedback_*` / `project_*` / `user_*` (these live in `~/.claude`, they can never resolve; repoint to a `wiki/lessons/` page).
+6. **Orphans, stubs, oversized, stale**, with **frozen exemptions**: pages under any `archive/` folder, under `log-archive/`, or with `status:` shipped / shipped-to-test / accepted / abandoned / superseded are history and skip the stale and oversized checks.
+7. **Frontmatter issues** (required fields, unknown types, bad dates) and **UTF-8 BOMs** (a BOM breaks frontmatter parsing for most tools; always strip).
+8. **Index drift** both directions, plus **log hygiene**: heading format, single-op rule, and the ~250 KB size budget that triggers a rotation to `wiki/log-archive/<YYYY-MM>.md` per CLAUDE.md.
+9. **Duplicate tables and paragraphs** across pages.
+10. **Doubled-path links** (`doubled_path`): any wikilink whose target contains the broken `projects/projects/` doubling (a known restructure artifact). Matched on link targets only, so prose that mentions the pattern does not false-positive. Fix is a literal `projects/projects/` → `projects/` replace, vault-wide, then re-scan to zero.
+11. **Unknown status** (`unknown_status`): a `plan` or `decision` whose `status:` is outside the canonical enum in `docs/project-handling.md` → Status vocabulary. Normalize to the closest canonical value. Archived pages are exempt.
+12. **Generated per-project indexes.** Every `wiki/projects/<slug>/<slug>-index.md` (`type: project-index`) is a build artifact from `scan.py --build-indexes`. The scanner skips these from required-field, stale, and orphan checks. They are what give every project-internal page an inbound link, so the root `index.md` no longer lists per-page plans/decisions/reviews.
+13. **Multiple live orchestrator boards** (`multiple_live_boards`): a project with more than one `type: orchestrator-board` page outside `orchestrator/archive/`. A fresh KP-God conductor boots from `board.md`; a second live board means it can boot the wrong one and mix past/present tasks (a real failure mode: days of work built on a stale board). Fix: keep `board.md` canonical, move the rest to `orchestrator/archive/` with an `ARCHIVED` banner, carry live lanes into `board.md`. This is a Phase 5 ask (it moves files), not an auto-fix.
+14. **Oversize orchestrator board** (`board_oversize`): a live board past ~12 KB. The conductor re-reads the board every boot, so an oversize board degrades its judgment; KP-God's own rule is to compact at that threshold. Fix (safe inline): collapse done lanes to one line each under "Recently done", move narrative into the relevant lane handoff, keep only live state.
 
 ### Phase 3: Qualitative judgment on deletion candidates
 
@@ -92,9 +94,14 @@ Never recommend Delete on a page whose content is load-bearing in another page's
 
 Apply these without asking. They are reversible by git and unambiguous:
 
-- **Unambiguous wikilink typos.** Broken `[[target]]` where exactly one page has a name within edit-distance 2 (e.g. `[[vannevar-bush]]` typo'd as `[[vannevar-bsh]]`). If two or more candidates match, escalate to Phase 5.
-- **Index drift adds.** Pages that exist on disk and have proper frontmatter but aren't in `index.md` get added under the correct category.
-- **Index drift removes.** Entries in `index.md` whose target file does not exist get removed.
+- **Unambiguous wikilink typos.** Broken `[[target]]` where exactly one page has a name within edit-distance 2 (e.g. `[[vannevar-bush]]` typo'd as `[[vanevar-bush]]`). If two or more candidates match, escalate to Phase 5.
+- **Unambiguous rename repoints.** Broken links where the scanner's rename suggestion has exactly one candidate and the surrounding prose clearly means that page. Rewrite as `[[full/path|old display]]`. Multiple candidates → Phase 5.
+- **BOM strips.** Remove the UTF-8 BOM from any page that has one.
+- **Doubled-path repair.** If `doubled_path` is non-empty, run a literal vault-wide `projects/projects/` → `projects/` replace (preserve line endings), then re-scan to confirm zero. Frozen `log-archive/` prose is included: the replace is meaning-preserving (same display text, link now resolves).
+- **Regenerate per-project indexes.** Run `python "$env:USERPROFILE\.claude\skills\KP-WikiHealth\scripts\scan.py" --build-indexes` to rebuild every `wiki/projects/<slug>/<slug>-index.md` from current frontmatter. This is the auto-fix for any project-internal page missing from its catalog. Deterministic, so a clean `git diff` after a regen means the catalogs match the frontmatter.
+- **Root index drift (vault-global only).** The root `index.md` lists only cross-project pages (Sources, Entities, Concepts, Syntheses, Comparisons, Social, Lessons, Skills, Projects roster). A vault-global page on disk with proper frontmatter but missing from `index.md` gets added under its category; an entry whose target file no longer exists gets removed. Do NOT hand-add project-internal pages here — they live in the generated `<slug>-index` files.
+- **Unknown-status normalize.** A `plan`/`decision` with an off-enum `status:` gets set to the closest canonical value (see `docs/project-handling.md` → Status vocabulary).
+- **Log rotation.** If the size budget fired, move all entries older than the current month to `wiki/log-archive/<YYYY-MM>.md` (same format, pointer left in log.md).
 - **Frontmatter `updated:` bump.** Only on pages this run modifies. Never bump a page you didn't touch.
 
 Each auto-fix gets a one-liner in the final report so the owner can review.
@@ -114,12 +121,14 @@ For each item, present the candidate and the recommendation. Wait for the owner'
 
 After the owner approves and the changes land, produce a final report:
 
+- The health score (from the scanner) before and after the run, so runs are comparable over time.
 - Pages deleted (with reasons).
 - Pages merged (source → target).
 - Pages split.
 - Frontmatter fixes.
 - Duplicate facts resolved (which page is now canonical).
-- Auto-fixes applied (link typos, index drift, updated bumps).
+- Auto-fixes applied (link typos, repoint mappings, BOM strips, index drift, updated bumps).
+- Log rotation performed, if the size budget fired.
 - Open items the owner deferred (won't fix this run).
 
 Then append a single entry to `wiki/log.md`:
@@ -140,13 +149,13 @@ Then append a single entry to `wiki/log.md`:
 
 - It does not touch `production/`, `raw/`, `.obsidian/`, `.backups/`, or `CLAUDE.md`.
 - It does not run per-project (use `KP-Healthcheck` for that).
-- It does not auto-delete. Deletes always require explicit owner approval.
-- It does not run code review or PR checks (that is `wrap-up`'s job).
+- It does not auto-delete. Deletes always require explicit the owner approval.
+- It does not run code review or PR checks (that is `check-pr` / `wrap-up`).
 
 ## Trigger precedence
 
 - **KP-WikiHealth vs wrap-up.** Wrap-up runs at end-of-session and includes a vault lint as one of its phases. KP-WikiHealth is the standalone deep version. If the owner says "wrap up", run wrap-up. If they say "lint" or "wiki health" without code-review context, run this skill.
-- **KP-WikiHealth vs KP-Healthcheck.** Healthcheck is for one project folder + its vault pages. WikiHealth is for the whole `wiki/`. If the phrase names a project ("healthcheck my-app"), Healthcheck wins. If it's vault-wide ("lint the wiki", "scan the vault"), WikiHealth wins.
+- **KP-WikiHealth vs KP-Healthcheck.** Healthcheck is for one project folder + its vault pages. WikiHealth is for the whole `wiki/`. If the phrase names a project ("healthcheck acme-site"), Healthcheck wins. If it's vault-wide ("lint the wiki", "scan the vault"), WikiHealth wins.
 
 ## Core principles
 

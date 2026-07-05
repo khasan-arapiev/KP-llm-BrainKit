@@ -10,7 +10,7 @@ The companion skill `KP-Setup` scaffolds the project folder layer and creates th
 
 ```
 wiki/projects/<slug>/
-  <slug>-overview.md     The entry point. Stack, status, links. (e.g. my-app-overview.md)
+  <slug>-overview.md     The entry point. Stack, status, links. (e.g. acme-app-overview.md)
   core/                  Supporting reference docs, grouped together.
     map.md               Module map, entry points, layering, local dev setup.
     context.md           Domain glossary.
@@ -25,19 +25,19 @@ wiki/projects/<slug>/
 ```
 
 **Why this layout:**
-- The overview file keeps the `<slug>-overview.md` name so cross-project wikilinks (e.g. `[[my-app-overview]]`) resolve uniquely without disambiguation.
-- The other root pages move into `core/` with short names (`map.md`, `context.md`, etc.). Within a project, write `[[map]]` and Obsidian resolves to this project's map. For cross-project links, use the slug-prefixed alias (every file has `aliases: [<slug>-<type>]` in frontmatter, e.g. `[[my-app-map]]` still works).
+- The overview file keeps the `<slug>-overview.md` name so cross-project wikilinks (e.g. `[[acme-app-overview]]`) resolve uniquely without disambiguation.
+- The other root pages move into `core/` with short names (`map.md`, `context.md`, etc.). Within a project, write `[[map]]` and Obsidian resolves to this project's map. For cross-project links, use the slug-prefixed alias (every file has `aliases: [<slug>-<type>]` in frontmatter, e.g. `[[acme-app-map]]` still works).
 - Plan / decision / post-mortem / learning files drop the date prefix. The date lives in the frontmatter `created:` field. Filenames stay short: `platform-design.md`, `v1-execution-plan.md`, etc.
 
-`<slug>` is the kebab-case project name (e.g. `my-app`, `example-app`).
+`<slug>` is the kebab-case project name (e.g. `recipe-box`, `acme-app`).
 
 **Aliases convention.** Every page inside `core/`, `plans/`, etc. should have an `aliases` frontmatter entry listing both the slug-prefixed name and the short name, so wikilinks resolve from anywhere in the vault:
 
 ```yaml
-aliases: [my-app-map, My App Map]
+aliases: [acme-app-map, Acme App Map]
 ```
 
-**Client umbrellas with sub-projects** (e.g. a client hosting studio-tool, ads-landing, sign-off):
+**Client umbrellas with sub-projects** (one client folder hosting several deliverables):
 
 ```
 wiki/projects/<client-slug>/
@@ -83,9 +83,10 @@ Trigger: "file a decision on X", "ADR for Y", "we just decided Z".
 
 Steps:
 1. Ask the owner for context if anything is unclear (the decision itself, the alternatives considered, the reasoning).
-2. Create `projects/<slug>/decisions/<YYYY-MM-DD>-<short-slug>.md` using the **ADR template** below.
-3. Link from `projects/<slug>/overview.md` if the decision is strategic.
-4. Update `wiki/log.md`: `## [YYYY-MM-DD] decision | <slug>: <one-line summary>`.
+2. **Amend-fold check (anti-churn).** Before creating a file, check whether this decision amends or supersedes one filed in the same project within the last ~7 days. If it does and the choice is the same evolving one, **edit that ADR** instead: revise its Decision section and append a dated `**Changelog:** YYYY-MM-DD — <what changed and why>` line, rather than spawning d(N+1). A new ADR is for a genuinely distinct choice or when the ~7-day window has passed. This stops rapid supersession chains (three ADRs on one UI choice inside 48 hours is over-filing, not a richer record).
+3. Create `projects/<slug>/decisions/<YYYY-MM-DD>-<short-slug>.md` using the **ADR template** below. When an ADR does supersede an older one (outside the fold window), set `supersedes:` on the new page and flip the old page's `status: superseded` in the same edit.
+4. Link from `projects/<slug>/overview.md` if the decision is strategic.
+5. Update `wiki/log.md`: `## [YYYY-MM-DD] decision | <slug>: <one-line summary>`.
 
 ### File a post-mortem
 
@@ -106,15 +107,37 @@ Steps:
 2. Create `projects/<slug>/learnings/<YYYY-MM-DD>-<short-slug>.md` using the **learning template** below.
 3. Update `wiki/log.md`: `## [YYYY-MM-DD] learning | <slug>: <one-line summary>`.
 
+### Status vocabulary (canonical)
+
+`status:` on a plan or decision uses one controlled value so the per-project index can sort live work above done work. Use exactly these (the generator ranks them in this order, live first):
+
+- **Plans:** `drafted` → `approved` → `building` → `shipped-to-test` → `shipped` → `superseded`. Also allowed: `living` (a standing reference plan, never "done"), `abandoned`.
+- **Decisions (ADRs):** `proposed` → `accepted` → `superseded`.
+
+`shipped-to-test` means built and deployed to test, awaiting verify; it is still live pipeline (do not archive). `shipped` means promoted to prod; archive the plan to `plans/archive/` when it reaches `shipped`/`superseded`/`abandoned`. Anything outside this list is flagged by the scanner as an unknown status; pick the closest canonical value rather than inventing a new one. `phase:` is a free-text field used only on `project-status` pages and is not part of this enum.
+
 ### Update project status
 
 Trigger: end of a working session, "update status", "where were we on X".
 
+`status.md` holds **current state, next up, and blockers only**. It never narrates sessions. The per-session record (what shipped, commit hashes, deploy IDs, file lists) is the job of [[log]], not status. The reason: `status.md` is the first thing a project session reads (see [[CLAUDE]] § Session boot), so it must stay small and high-signal. Left unattended it drifts into a diary and every future session pays for it at boot. Trimming it back is part of closing a session, not a separate cleanup.
+
+**The keep-vs-move test.** For every block in status, ask: *"If I delete this, does the next chat lose a fact it needs to act correctly or to avoid a mistake?"*
+- **Yes → it stays.** This is forward-facing, load-bearing state: current state (one short paragraph, the latest only), next up, blockers and gates, load-bearing constants (live URLs, the law/contract pointers, cutover constraints), alive open follow-ups, the routing table.
+- **No → it moves to [[log]].** This is a backward-facing record: per-session narration, commit hashes, deploy IDs, file-by-file change lists, anything shipped/verified/closed that nothing downstream depends on.
+
+Shipped PRDs and old reviews move to the project's `archive.md` (see [[index]] and the per-folder `archive/` pattern), not the log.
+
+**Three guardrails:**
+- **Relocate before delete.** Write the log entry (step 4) *first*, detailed enough that trimming status loses nothing load-bearing. Only then trim status. Never delete narration that has no other home. This move is no-ask (no information is lost), like an ADR status flip.
+- **Structural cap (measured in bytes, not lines).** The "Right now" / current-state section is one short paragraph (the latest session). The ceiling is **~8 KB target, ~12 KB hard** (`wc -c status.md`), not a line count: a few mega-bullets pass an 80-line check while blowing the boot token budget, so lines are the wrong unit. Past the hard ceiling the trim is mandatory, not optional, and no single bullet may be a paragraph of build narration (commit hashes, gate logs, how-shipped) — that is always the log's job. A large pending-verify backlog can legitimately sit near the hard ceiling; build narration never can.
+- **Keep when unsure.** If a block is ambiguous, leave it in status *and* mirror it to the log. Over-trimming (dropping a live item) is the only failure mode that hurts the next chat, so bias toward keeping it in status while guaranteeing the log copy.
+
 Steps:
-1. Rewrite the **Last session** and **Next up** sections of `projects/<slug>/status.md`.
-2. Add or remove blockers.
-3. Bump `updated:` in the page's frontmatter.
-4. Update `wiki/log.md`: `## [YYYY-MM-DD] status | <slug>: <one-line summary of session>`.
+1. Write the session's per-day record to `wiki/log.md` first (detailed, newest at top): `## [YYYY-MM-DD] <op> | <slug>: <summary>`. This is the relocate-before-delete invariant.
+2. Rewrite the current-state paragraph and the **Next up** section of `projects/<slug>/status.md`; apply the keep-vs-move test to every existing block, moving backward-facing detail out (it is now in the log) and keeping forward-facing state.
+3. Add or remove blockers. Confirm the routing table at the top still points to the right pages.
+4. Bump `updated:` in the page's frontmatter.
 
 ### Refresh project context
 

@@ -4,9 +4,9 @@ description: >
   Structured alignment session. Run before any non-trivial work (a new
   project, a new feature, a redesign, a refactor) to surface unstated
   goals, hidden assumptions, scope, risks, and the smallest version
-  worth shipping. One sharp question per turn, capped at 10, until
-  the owner has clarity. Output is a PRD page filed to the Obsidian Brain
-  vault at wiki/projects/<slug>/plans/.
+  worth shipping. One sharp question per turn, as many as it takes,
+  until the owner has clarity. Output is a PRD page filed to the Obsidian Brain
+  vault at <vault>\wiki\projects\<slug>\plans\.
   Major choices that surface are filed as separate ADRs.
   Trigger on: "KP-Grill", "KP-grill", "grill me", "let's plan", "let's
   design this", "let's think this through", "spec this out", "scope
@@ -19,13 +19,13 @@ license: MIT
 
 # KP-Grill
 
-A grilling session. The agent's job is to be relentlessly useful, not pleasant. Ask the questions that uncover what the owner actually wants. Push back when the idea has a weak spot. Surface the trade-offs. Leave them with a tight PRD and a clear next step.
-
 ## Vault path
 
 Resolve the vault root from `~/.claude/brainkit.json` (the `vaultPath` key). If that
 file is missing, ask the owner where their Brain vault lives and offer to create the
 config. Throughout this skill, `<vault>` means that resolved path.
+
+A grilling session. The agent's job is to be relentlessly useful, not pleasant. Ask the questions that uncover what the owner actually wants. Push back when their idea has a weak spot. Surface the trade-offs. Leave them with a tight PRD and a clear next step.
 
 ## When to use
 
@@ -39,16 +39,15 @@ Skip for trivial work (typo fix, tag tweak, a small bug).
 
 ## When NOT to use
 
-- The owner already has a written PRD or spec. Just build it.
-- The owner is asking a question, not planning work.
+- the owner already has a written PRD or spec. Just build it.
+- the owner is asking a question, not planning work.
 - Production is broken. Use `KP-BugFix` instead.
 
 ## How it works
 
-One sharp question per turn. Wait for the answer. Use the answer to choose the next question. Stop when:
-- Every question on the checklist below has a real answer, OR
-- The owner says "enough" or "build it now", OR
-- 10 questions have been asked.
+One sharp question per turn. Wait for the answer. Use the answer to choose the next question. There is no fixed question limit; ask as many as the topic genuinely needs. Stop when:
+- Every question on the checklist below has a real answer and no open issue remains, OR
+- the owner says "enough" or "build it now".
 
 Never ask compound questions ("what is the goal AND who is it for"). One axis per turn.
 
@@ -66,7 +65,7 @@ If the project does not exist in the vault yet (brand new idea), skip this phase
 
 Before Question 1, confirm the project slug. If the owner has already named the project, or the grill is happening inside an existing project's vault folder, use that slug. If not, the very first question is:
 
-"What should I call this project? Give me a short kebab-case slug (e.g. `my-app`, `studio-tool`)."
+"What should I call this project? Give me a short kebab-case slug (e.g. `recipe-box`, `studio-tool`)."
 
 The rest of the grill anchors to this slug. If the owner refuses to name it, do not invent one; abort and ask them to name it before proceeding.
 
@@ -83,7 +82,7 @@ The rest of the grill anchors to this slug. If the owner refuses to name it, do 
 9. **Dependencies.** Anything blocking the start? Anything that has to be ready first?
 10. **Alternatives.** What else did you consider, and why is this the one?
 
-Adapt the wording to the project. Skip a question if the answer is genuinely obvious from context (do not ask "who is this for" if the owner is clearly building it for themselves). Add an off-checklist question if a deeper issue surfaces.
+Adapt the wording to the project. Skip a question if the answer is genuinely obvious from context (do not ask "who is this for" if the owner is clearly building it for himself). Add an off-checklist question if a deeper issue surfaces.
 
 ## House style for the questions
 
@@ -104,7 +103,7 @@ Push back is part of the job. Do not skip it.
 
 ## Three docs-aware behaviors (interleave with the question checklist)
 
-These run alongside the 10-question checklist whenever the pre-grill scan loaded context. They are not separate questions, they shape how you challenge the answers.
+These run alongside the question checklist whenever the pre-grill scan loaded context. They are not separate questions, they shape how you challenge the answers.
 
 ### Challenge against the glossary
 
@@ -133,7 +132,7 @@ If a code check is uncertain, say so. "I see `cancel.ts` but didn't read it end-
 
 When the grill is done, produce a PRD page in the vault.
 
-Location: `<vault>/wiki/projects/<slug>/plans/<YYYY-MM-DD>-<short-slug>.md`
+Location: `<vault>\wiki\projects\<slug>\plans\<YYYY-MM-DD>-<short-slug>.md`
 
 If the project does not exist in the vault yet (this is a brand new idea), do not file the PRD anywhere yet. Stop and tell the owner to run `KP-Setup` first so the project's vault folder exists. Then re-run KP-Grill to file the PRD into `wiki/projects/<slug>/plans/`. There is no vault-root plans folder.
 
@@ -152,12 +151,12 @@ If context.md does not exist yet, create it lazily the moment the first term nee
 File an ADR only when all three are true:
 
 1. **Hard to reverse.** The cost of changing your mind later is real (data migrations, breaking changes, public commitments).
-2. **Surprising without context.** A future reader, including the future owner, will look at the code and ask "why did they do it this way?".
+2. **Surprising without context.** A future reader, including future-the owner, will look at the code and ask "why did they do it this way?".
 3. **Result of a real trade-off.** There were genuine alternatives. You picked one for specific reasons.
 
 If any one of the three is missing, skip the ADR. Default to skipping. "We chose Postgres" is not an ADR if nobody would be surprised; it is one if the obvious choice was SQLite and you went the other way for specific reasons.
 
-ADRs land in `wiki/projects/<slug>/decisions/` using the template in `<vault>/docs/project-handling.md`.
+ADRs land in `wiki/projects/<slug>/decisions/` using the template in `Brain/docs/project-handling.md`.
 
 Also:
 - Update `wiki/index.md`: add the PRD under a `## Plans` section (create if missing).
@@ -193,5 +192,5 @@ When the owner's phrase matches more than one skill, follow these rules:
 2. **Be critical.** A grill that produces only agreement is a failed grill.
 3. **Plain English.** Match the house style: no dashes, short, direct.
 4. **Output to the vault, not to chat.** Chat history vanishes. The vault page persists.
-5. **Stop when done.** Do not pad to hit 10 questions if 6 was enough.
+5. **Stop when done.** There is no question cap; ask as many as the topic needs, but do not pad with filler once clarity is reached. Six sharp questions beats twelve loose ones.
 6. **Leave it clean.** If the grill is abandoned before producing a PRD, delete any partial draft. Do not leave half-written plans cluttering the vault. If the grill produces a PRD that is later abandoned, set `status: abandoned` in the frontmatter rather than leave it as `drafted`.

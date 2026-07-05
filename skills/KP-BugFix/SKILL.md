@@ -5,7 +5,7 @@ description: >
   instrument, fix, regression-check. Stops shortcuts. Forces a real
   understanding of the root cause before any code change. When the fix
   lands, files a post-mortem to the Obsidian Brain vault at
-  wiki/projects/<slug>/post-mortems/.
+  <vault>\wiki\projects\<slug>\post-mortems\.
   Trigger on: "KP-BugFix", "KP-bugfix", "bug fix", "fix this bug",
   "this is broken", "this doesn't work", "doesn't work", "isn't working",
   "not working", "failing", "throwing", "throws an error", "errors out",
@@ -19,13 +19,13 @@ license: MIT
 
 # KP-BugFix
 
-A disciplined six-phase loop for fixing real bugs. The cost of guessing is high. The cost of slowing down for ten minutes is low. This skill enforces that trade.
-
 ## Vault path
 
 Resolve the vault root from `~/.claude/brainkit.json` (the `vaultPath` key). If that
 file is missing, ask the owner where their Brain vault lives and offer to create the
 config. Throughout this skill, `<vault>` means that resolved path.
+
+A disciplined six-phase loop for fixing real bugs. The cost of guessing is high. The cost of slowing down for ten minutes is low. This skill enforces that trade.
 
 ## When to use
 
@@ -46,10 +46,12 @@ Do them in order. Do not skip. If a phase fails, do not move on, fix that phase 
 
 You cannot fix what you cannot trigger.
 
+- Reproduce end-to-end, as close to how the end user hits it as possible: the real page in a browser, the real endpoint with a real payload, the real command. A unit test or an isolated function call is not a reproduction, it is a hypothesis about where the bug lives. Reproducing at the wrong layer means fixing the wrong layer while the user still sees the bug.
 - Ask the owner for exact reproduction steps if not already clear.
 - Run the failing command, hit the failing endpoint, open the failing page.
 - Observe the failure with your own eyes (or read the log of one).
 - Write down the exact symptom: the error message, the wrong output, the stack trace.
+- Only after the E2E repro is in hand, narrow to the failing layer (that is Phase 2's job).
 
 If the bug does not reproduce, stop. Ask:
 - "I cannot reproduce. Can you give me the exact input or steps?"
@@ -91,6 +93,7 @@ If no hypothesis fits, go back to Phase 3. Generate new ones. Do not guess at a 
 
 Make the minimum change that addresses the confirmed cause.
 
+- Fix at the shared function, not per-caller. Before editing, grep every caller of the function you are about to touch. One guard in the function all callers route through is a smaller, more correct change than a guard in each caller. Patching only the path the report names leaves every sibling caller still broken. The root-cause fix is usually the smaller diff.
 - Trace every line of the change directly to the root cause.
 - Do not refactor adjacent code "while you are here".
 - Do not add defensive code for hypothetical other bugs.
@@ -111,9 +114,9 @@ If anything regressed, return to Phase 3 with the new symptom.
 
 When the fix is confirmed, file a post-mortem to the vault.
 
-Location: `<vault>/wiki/projects/<slug>/post-mortems/<YYYY-MM-DD>-<short-slug>.md`
+Location: `<vault>\wiki\projects\<slug>\post-mortems\<YYYY-MM-DD>-<short-slug>.md`
 
-Use the post-mortem template defined in `<vault>/docs/project-handling.md`. Fill in:
+Use the post-mortem template defined in `Brain\docs\project-handling.md`. Fill in:
 - What happened (the symptom).
 - Root cause (the real reason, not the symptom).
 - What we tried (in order).
